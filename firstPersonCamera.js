@@ -69,7 +69,7 @@ var FirstPersonCamera = function () {
   }.bind(this);
 
   //TODO: Придумать нормальную функцию вращения камеры
-  $(document).mousemove(function(e) {
+  document.onmousemove = function(e) {
     self.target.set(20*Math.cos(e.pageX/300)+camera.position.x,($(window).height()-e.pageY)/20,20*Math.sin(e.pageX/300)+camera.position.z);
-  });
+  };
 };
