@@ -1,75 +1,127 @@
 var FirstPersonCamera = function () {
 
-  var camera = this.object = new THREE.PerspectiveCamera(45 , window.innerWidth / window.innerHeight , 0.1, 1000);
   //Some options
   this.movementSpeed = 1;
+  this.rotationSpeed = 0.02;
+  //this.canFly = false;
 
-  var self = this;
+  this.object = new THREE.PerspectiveCamera(45 , window.innerWidth / window.innerHeight , 0.1, 1000);
+  this.object.position.set(0,10,0);
 
-  this.position = {x: 0, y: 0, z: 0};
-  this.target = new THREE.Vector3(0,10,0);
+  //For debugging purposes
+  //var cubeGeometry = new THREE.CubeGeometry(4,4,4);
+  //var cubeMaterial = new THREE.MeshPhongMaterial(
+  //  {color: 0xff0000,specular: 0xffeeee,shininess: 100});
+  //this.target = new THREE.Vector3(10,10,10);
+  //this.target = new THREE.Mesh(cubeGeometry,cubeMaterial);
+  //this.target = new THREE.Object3D();
+  //this.target.position.set(10,10,10);
+  this.target = new THREE.Vector3(10,10,10);
 
+  this.rotation = 0;
+
+  this.move = false;
   this.moveForward = false;
   this.moveBackward = false;
   this.moveLeft = false;
   this.moveRight = false;
 
+  this.deltaX = 0;
+  this.deltaZ = 0;
+  this.lastPositionX = 0;
+  this.lastPositionZ = 0;
+
   this.update = function () {
-    if (this.moveForward) {
-      camera.translateZ(-this.movementSpeed);
+    this.lastPositionX = this.object.position.x;
+    this.lastPositionZ = this.object.position.z;
+
+    //Перемещаем камеру в соответсвии с нажатыми клавишами
+    if (this.moveForward && !this.moveBackward) {
+      this.object.translateZ(-this.movementSpeed);
+      this.move = true;
     }
-    if (this.moveBackward) {
-      camera.translateZ(this.movementSpeed);
+    if (this.moveBackward && !this.moveForward) {
+      this.object.translateZ(this.movementSpeed);
+      this.move = true;
     }
-    if (this.moveLeft) {
-      this.target.setX(this.target.x-this.movementSpeed);
-      camera.translateX(-this.movementSpeed);
+    if (this.moveLeft && !this.moveRight) {
+      this.object.translateX(-this.movementSpeed);
+      this.move = true;
     }
-    if (this.moveRight) {
-      this.target.setX(this.target.x+this.movementSpeed);
-      camera.translateX(this.movementSpeed);
+    if (this.moveRight && !this.moveLeft) {
+      this.object.translateX(this.movementSpeed);
+      this.move = true;
     }
 
-    //this.target.set(camera.position.x+10,10,camera.position.z+10);
-    camera.lookAt(this.target);
+    //Если камера переместилась, перемещаем и её цель
+    if (this.move) {
+      this.move = false;
+      this.deltaX = this.object.position.x - this.lastPositionX;
+      this.deltaZ = this.object.position.z - this.lastPositionZ;
+      this.target.x += this.deltaX;
+      this.target.z += this.deltaZ;
+    }
+
+    if (this.rotateLeft) {
+      this.rotateLeft = false;
+      this.rotation -= this.deltaRotationX*this.rotationSpeed;
+      this.target.x = this.object.position.x+20*Math.cos(this.rotation);
+      this.target.z = this.object.position.z+20*Math.sin(this.rotation);
+    }
+
+    if (this.rotateRight) {
+      this.rotateRight = false;
+      this.rotation += this.deltaRotationX*0.02;
+      this.target.x = this.object.position.x+20*Math.cos(this.rotation);
+      this.target.z = this.object.position.z+20*Math.sin(this.rotation);
+    }
+
+    this.object.lookAt(this.target);
   };
 
   //Биндим обработчики кнопок
 
   document.onkeydown = function (pressedKey) {
-    console.log(pressedKey.keyCode);
-    if (pressedKey.keyCode === 87) {
-      this.moveForward = true;
-    }
-    if (pressedKey.keyCode === 83) {
-      this.moveBackward = true;
-    }
-    if (pressedKey.keyCode === 65) {
-      this.moveLeft = true;
-    }
-    if (pressedKey.keyCode === 68) {
-      this.moveRight = true;
+
+    //console.log(pressedKey.keyCode);
+
+    switch(pressedKey.keyCode) {
+
+      case 87: this.moveForward = true; break;
+      case 83: this.moveBackward = true; break;
+      case 65: this.moveLeft = true; break;
+      case 68: this.moveRight = true; break;
+
     }
   }.bind(this);
 
   document.onkeyup = function (pressedKey) {
-    console.log(pressedKey.keyCode);
-    if (pressedKey.keyCode === 87) {
-      this.moveForward = false;
-    }
-    if (pressedKey.keyCode === 83) {
-      this.moveBackward = false;
-    }
-    if (pressedKey.keyCode === 65) {
-      this.moveLeft = false;
-    }
-    if (pressedKey.keyCode === 68) {
-      this.moveRight = false;
+
+    switch(pressedKey.keyCode) {
+
+      case 87: this.moveForward = false; break;
+      case 83: this.moveBackward = false; break;
+      case 65: this.moveLeft = false; break;
+      case 68: this.moveRight = false; break;
+
     }
   }.bind(this);
 
-  //TODO: Придумать нормальную функцию вращения камеры
+  // Придумать нормальную функцию вращения камеры
+
+  var lastPageX = 0;
+
   document.onmousemove = function(e) {
-    self.target.set(20*Math.cos(e.pageX/300)+camera.position.x,($(window).height()-e.pageY)/20,20*Math.sin(e.pageX/300)+camera.position.z);
-  };
+
+    if (e.pageX > lastPageX) {
+      this.deltaRotationX = e.pageX - lastPageX;
+      this.rotateRight = true;
+    }
+    if (e.pageX < lastPageX) {
+      this.deltaRotationX = lastPageX - e.pageX;
+      this.rotateLeft = true;
+    }
+    lastPageX = e.pageX;
+
+  }.bind(this);
 };
