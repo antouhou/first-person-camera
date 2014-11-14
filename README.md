@@ -18,9 +18,13 @@ and then add to your scene render function:
 ###Options
 
 movementSpeed - movement speed. Defaults to 1.
+
 rotationSpeed - rotation speed. Defaults to 0.02.
+
 canFly - allow camera change it y position by moving forward/backward. Defaults to false.
+
 defaultPosition - default position for camera. Defaults to {x: 0, y:10, z: 0}
+
 targetObj = a THREE.Object3D to place right before camera. It can be a sight, for example. Defaults to empty Object3D. 
 
 ###Controls
